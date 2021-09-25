@@ -1,0 +1,33 @@
+#!/bin/sh
+set -e
+[ -z "$password" ] && {
+    echo "You must set up password in 'password' environment variable"
+    exit 1
+}
+[ -z "$username" ] && {
+    echo "You don't enter a username, so it will set up as 'proxyuser' by default"
+    username="proxyuser"
+}
+useradd --shell /usr/sbin/nologin $username
+echo "$username:$password" | chpasswd
+
+cat > /etc/danted.conf <<EOF
+internal: eth0 port = 1080
+external: eth0
+
+socksmethod: username
+user.privileged: root
+user.unprivileged: nobody
+
+client pass {
+from: 0/0 to: 0/0
+log: error
+}
+
+socks pass {
+from: 0/0 to: 0/0
+log: error
+}
+EOF
+
+danted
